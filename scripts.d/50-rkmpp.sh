@@ -9,19 +9,23 @@ ffbuild_enabled() {
 
 ffbuild_dockerbuild() {
     git-mini-clone "$SCRIPT_REPO" "$SCRIPT_COMMIT" mpp
-    (
-    	cd mpp/build/linux/aarch64 && ./make-Makefiles.bash
-    )
 
     (
-    	cd mpp && cmake -DCMAKE_TOOLCHAIN_FILE="$FFBUILD_CMAKE_TOOLCHAIN" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$FFBUILD_PREFIX" -DHEADERS_ONLY=ON .
-    )
+        export CC="gcc"
+        export CXX="g++"
+        export TARGET_CC="${FFBUILD_CROSS_PREFIX}gcc"
+        export TARGET_CXX="${FFBUILD_CROSS_PREFIX}g++"
+        export CROSS_COMPILE=1
+        export TARGET_CFLAGS="$CFLAGS"
+        export TARGET_CXXFLAGS="$CFLAGS"
+        unset CFLAGS
+        unset CXXFLAGS
 
-    (
-    	cd mpp/build/linux/aarch64
+        cd mpp/build/linux/aarch64 && ./make-Makefiles.bash
+        cmake -DCMAKE_TOOLCHAIN_FILE="$FFBUILD_CMAKE_TOOLCHAIN" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$FFBUILD_PREFIX" -DHEADERS_ONLY=ON .
 
-    	make -j$(nproc)
-    	make install
+        make -j$(nproc)
+        make install
     )
 }
 
